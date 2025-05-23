@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>광주전남 실시간 교통정보</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2E8B57 0%, #228B22 50%, #32CD32 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .api-config {
+            background: #e3f2fd;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #2196f3;
+        }
+        
+        .api-input-group {
+            margin-bottom: 15px;
+        }
+        
+        .api-input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .api-input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .api-test-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .api-test-btn:hover {
+            background: #1976d2;
+        }
+        
+        .status {
+            background: #f5f5f5;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .traffic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .section-title {
+            grid-column: 1/-1;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 10px 0;
+            border-bottom: 2px solid #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .road-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .road-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .road-card.congested {
+            border-left-color: #e74c3c;
+        }
+        
+        .road-card.slow {
+            border-left-color: #f39c12;
+        }
+        
+        .road-card.smooth {
+            border-left-color: #27ae60;
+        }
+        
+        .road-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .road-section {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .traffic-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.congested {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .status-badge.slow {
+            background: #fff8e1;
+            color: #ef6c00;
+        }
+        
+        .status-badge.smooth {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .controls {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin: 0 10px;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .refresh-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .update-time {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-align: center;
+            margin: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #FF6B35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+        
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            border-left: 5px solid #28a745;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .demo-data {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 광주전남 실시간 교통정보</h1>
+            <p>한국도로공사 고속도로 + 광주광역시 실시간 교통현황</p>
+        </div>
+        
+        <div class="api-config">
+            <h3>🔑 API 키 설정</h3>
+            <div class="demo-data">
+                💡 현재는 CORS 문제로 실제 API 호출이 제한됩니다. 데모 데이터로 UI를 확인할 수 있습니다.
+            </div>
+            <div class="api-input-group">
+                <label for="highwayApiKey">한국도로공사 고속도로 교통정보 API 키:</label>
+                <input type="text" id="highwayApiKey" placeholder="API 키를 입력하세요">
+            </div>
+            <div class="api-input-group">
+                <label for="gwangjuApiKey">광주광역시 교통정보 API 키:</label>
+                <input type="text" id="gwangjuApiKey" placeholder="API 키를 입력하세요">
+            </div>
+            <button class="api-test-btn" onclick="testApiConnections()">🔍 API 연결 테스트</button>
+            <button class="api-test-btn" onclick="saveApiKeys()">💾 API 키 저장</button>
+            <button class="api-test-btn" onclick="loadDemoData()">🎯 데모 데이터 로드</button>
+        </div>
+        
+        <div class="status" id="connectionStatus">
+            API 키를 설정하고 연결 테스트를 진행하거나 데모 데이터를 로드해주세요.
+        </div>
+        
+        <div class="traffic-grid" id="trafficGrid">
+            <div class="no-data">
+                API 키를 설정하고 데이터를 불러오거나 데모 데이터를 확인해주세요.
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="refresh-btn" onclick="updateTrafficData()" id="refreshBtn">
+                🔄 교통정보 업데이트
+            </button>
+            <button class="refresh-btn" onclick="toggleAutoRefresh()" id="autoRefreshBtn">
+                <span id="autoRefreshText">⏰ 자동새로고침 시작</span>
+            </button>
+        </div>
+        
+        <div class="update-time" id="updateTime">
+            <!-- 업데이트 시간이 여기에 표시됩니다 -->
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let highwayApiKey = '';
+        let gwangjuApiKey = '';
+        let isDemo = false;
+        
+        // 데모 데이터
+        const demoData = {
+            highway: [
+                {
+                    routeName: '호남고속도로',
+                    startName: '광주IC',
+                    endName: '장성IC',
+                    speed: 75,
+                    traffic: '보통',
+                    distance: '25.3',
+                    travelTime: '20'
+                },
+                {
+                    routeName: '서남해안고속도로',
+                    startName: '목포IC',
+                    endName: '광주IC',
+                    speed: 45,
+                    traffic: '많음',
+                    distance: '58.7',
+                    travelTime: '78'
+                },
+                {
+                    routeName: '광주대구고속도로',
+                    startName: '광주IC',
+                    endName: '담양IC',
+                    speed: 65,
+                    traffic: '보통',
+                    distance: '15.8',
+                    travelTime: '15'
+                }
+            ],
+            gwangju: [
+                {
+                    roadName: '무등로',
+                    startPoint: '광주역',
+                    endPoint: '충장로',
+                    avgSpeed: 35,
+                    congestionLevel: '서행',
+                    trafficStatus: '서행'
+                },
+                {
+                    roadName: '경열로',
+                    startPoint: '금남로',
+                    endPoint: '상무지구',
+                    avgSpeed: 25,
+                    congestionLevel: '정체',
+                    trafficStatus: '정체'
+                },
+                {
+                    roadName: '월산로',
+                    startPoint: '첨단지구',
+                    endPoint: '광산구청',
+                    avgSpeed: 55,
+                    congestionLevel: '원활',
+                    trafficStatus: '원활'
+                }
+            ]
+        };
+        
+        // 데모 데이터 로드
+        function loadDemoData() {
+            isDemo = true;
+            showMessage('데모 데이터를 로드했습니다. 실제 API 대신 샘플 데이터를 표시합니다.', 'success');
+            updateTrafficData();
+        }
+        
+        // API 키 저장
+        function saveApiKeys() {
+            highwayApiKey = document.getElementById('highwayApiKey').value.trim();
+            gwangjuApiKey = document.getElementById('gwangjuApiKey').value.trim();
+            
+            if (!highwayApiKey || !gwangjuApiKey) {
+                showMessage('모든 API 키를 입력해주세요.', 'error');
+                return;
+            }
+            
+            isDemo = false;
+            showMessage('API 키가 저장되었습니다.', 'success');
+        }
+        
+        // API 연결 테스트
+        async function testApiConnections() {
+            const tempHighwayKey = document.getElementById('highwayApiKey').value.trim();
+            const tempGwangjuKey = document.getElementById('gwangjuApiKey').value.trim();
+            
+            if (!tempHighwayKey || !tempGwangjuKey) {
+                showMessage('모든 API 키를 입력해주세요.', 'error');
+                return;
+            }
+            
+            const status = document.getElementById('connectionStatus');
+            status.innerHTML = '🔍 API 연결 테스트 중...';
+            
+            // CORS 문제로 실제 테스트는 제한되므로 시뮬레이션
+            setTimeout(() => {
+                showMessage('⚠️ CORS 정책으로 브라우저에서 직접 API 테스트가 제한됩니다. 서버 환경에서 테스트하거나 데모 데이터를 사용해주세요.', 'error');
+            }, 1000);
+        }
+        
+        // 한국도로공사 고속도로 교통정보 API 호출 (실제 환경용)
+        async function fetchHighwayTrafficData() {
+            if (!highwayApiKey) {
+                throw new Error('한국도로공사 API 키가 설정되지 않았습니다.');
+            }
+            
+            // CORS 문제로 브라우저에서 직접 호출 불가
+            // 실제 환경에서는 프록시 서버나 백엔드 API를 통해 호출해야 함
+            const url = `https://apis.data.go.kr/1613000/ExpwayTrafficInfoService/getExpwayTrafficInfo?serviceKey=${highwayApiKey}&numOfRows=50&dataType=json`;
+            
+            throw new Error('CORS 정책으로 브라우저에서 직접 API 호출이 제한됩니다. 프록시 서버를 사용하거나 데모 데이터를 확인해주세요.');
+        }
+        
+        // 광주광역시 실시간 교통현황 API 호출 (실제 환경용)
+        async function fetchGwangjuTrafficData() {
+            if (!gwangjuApiKey) {
+                throw new Error('광주광역시 API 키가 설정되지 않았습니다.');
+            }
+            
+            throw new Error('CORS 정책으로 브라우저에서 직접 API 호출이 제한됩니다. 프록시 서버를 사용하거나 데모 데이터를 확인해주세요.');
+        }
+        
+        // 교통정보 업데이트
+        async function updateTrafficData() {
+            const grid = document.getElementById('trafficGrid');
+            const status = document.getElementById('connectionStatus');
+            const updateTime = document.getElementById('updateTime');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            refreshBtn.disabled = true;
+            status.innerHTML = '🔄 교통정보 업데이트 중...';
+            grid.classList.add('loading');
+            
+            try {
+                let highwayData, gwangjuData;
+                
+                if (isDemo) {
+                    // 데모 데이터 사용
+                    highwayData = { status: 'fulfilled', value: demoData.highway };
+                    gwangjuData = { status: 'fulfilled', value: demoData.gwangju };
+                } else {
+                    // 실제 API 호출 (CORS 문제로 실패할 것임)
+                    const [highway, gwangju] = await Promise.allSettled([
+                        fetchHighwayTrafficData(),
+                        fetchGwangjuTrafficData()
+                    ]);
+                    highwayData = highway;
+                    gwangjuData = gwangju;
+                }
+                
+                let hasData = false;
+                let htmlContent = '';
+                
+                // 고속도로 데이터 처리
+                if (highwayData.status === 'fulfilled' && highwayData.value.length > 0) {
+                    htmlContent += '<div class="section-title">🛣️ 고속도로 교통정보</div>';
+                    
+                    highwayData.value.forEach(item => {
+                        const speed = parseInt(item.speed) || 0;
+                        const trafficStatus = getTrafficStatus(speed);
+                        
+                        htmlContent += `
+                            <div class="road-card ${trafficStatus}">
+                                <div class="status-badge ${trafficStatus}">${getStatusText(trafficStatus)}</div>
+                                <div class="road-name">${item.routeName || '고속도로'}</div>
+                                <div class="road-section">구간: ${item.startName || ''} - ${item.endName || ''}</div>
+                                <div class="traffic-info">
+                                    <div class="info-item">
+                                        <div class="info-label">평균속도</div>
+                                        <div class="info-value">${speed} km/h</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">교통량</div>
+                                        <div class="info-value">${item.traffic || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #6c757d; text-align: center;">
+                                    거리: ${item.distance || 'N/A'}km | 소요시간: ${item.travelTime || 'N/A'}분
+                                </div>
+                            </div>
+                        `;
+                    });
+                    hasData = true;
+                }
+                
+                // 광주광역시 데이터 처리
+                if (gwangjuData.status === 'fulfilled' && gwangjuData.value.length > 0) {
+                    htmlContent += '<div class="section-title">🏙️ 광주광역시 교통현황</div>';
+                    
+                    gwangjuData.value.forEach(item => {
+                        const speed = parseInt(item.avgSpeed || item.speed) || 0;
+                        const trafficStatus = getTrafficStatus(speed);
+                        
+                        htmlContent += `
+                            <div class="road-card ${trafficStatus}">
+                                <div class="status-badge ${trafficStatus}">${getStatusText(trafficStatus)}</div>
+                                <div class="road-name">${item.roadName || item.linkName || '도로명 정보 없음'}</div>
+                                <div class="road-section">구간: ${item.startPoint || ''} - ${item.endPoint || ''}</div>
+                                <div class="traffic-info">
+                                    <div class="info-item">
+                                        <div class="info-label">평균속도</div>
+                                        <div class="info-value">${speed} km/h</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">혼잡도</div>
+                                        <div class="info-value">${item.congestionLevel || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #6c757d; text-align: center;">
+                                    소통상황: ${item.trafficStatus || getStatusText(trafficStatus)}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    hasData = true;
+                }
+                
+                if (hasData) {
+                    grid.innerHTML = htmlContent;
+                    status.innerHTML = `✅ ${isDemo ? '데모 ' : ''}교통정보 업데이트 완료`;
+                    status.className = 'status success-message';
+                } else {
+                    grid.innerHTML = '<div class="no-data">현재 조회 가능한 교통정보가 없습니다.</div>';
+                    status.innerHTML = '⚠️ 조회된 교통정보가 없습니다.';
+                    status.className = 'status';
+                }
+                
+                // API 오류 메시지 표시
+                if (!isDemo) {
+                    const errors = [];
+                    if (highwayData.status === 'rejected') {
+                        errors.push(`고속도로: ${highwayData.reason.message}`);
+                    }
+                    if (gwangjuData.status === 'rejected') {
+                        errors.push(`광주광역시: ${gwangjuData.reason.message}`);
+                    }
+                    
+                    if (errors.length > 0) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message';
+                        errorDiv.innerHTML = `<strong>API 오류:</strong><br>${errors.join('<br>')}`;
+                        grid.appendChild(errorDiv);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('교통정보 업데이트 오류:', error);
+                grid.innerHTML = '<div class="no-data">교통정보 업데이트 중 오류가 발생했습니다.</div>';
+                showMessage(`교통정보 업데이트 실패: ${error.message}`, 'error');
+            } finally {
+                grid.classList.remove('loading');
+                refreshBtn.disabled = false;
+                
+                const now = new Date();
+                updateTime.innerHTML = `마지막 업데이트: ${now.toLocaleString('ko-KR')}`;
+            }
+        }
+        
+        function getTrafficStatus(speed) {
+            if (speed >= 60) return 'smooth';
+            if (speed >= 30) return 'slow';
+            return 'congested';
+        }
+        
+        function getStatusText(status) {
+            switch(status) {
+                case 'smooth': return '원활';
+                case 'slow': return '서행';
+                case 'congested': return '정체';
+                default: return '알 수 없음';
+            }
+        }
+        
+        function toggleAutoRefresh() {
+            const button = document.getElementById('autoRefreshText');
+            
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                button.textContent = '⏰ 자동새로고침 시작';
+            } else {
+                autoRefreshInterval = setInterval(updateTrafficData, 120000); // 2분마다
+                button.textContent = '⏰ 자동새로고침 중단';
+                updateTrafficData(); // 즉시 한 번 실행
+            }
+        }
+        
+        function showMessage(message, type) {
+            const status = document.getElementById('connectionStatus');
+            status.innerHTML = message;
+            status.className = `status ${type === 'error' ? 'error-message' : 'success-message'}`;
+        }
+        
+        // 페이지 언로드 시 정리
+        window.addEventListener('beforeunload', function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            showMessage('페이지가 로드되었습니다. API 키를 설정하거나 데모 데이터를 로드해주세요.', 'success');
+        });
+    </script>
+</body>
+</html>
