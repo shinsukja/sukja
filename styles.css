@@ -1,0 +1,104 @@
+body {
+    background-color: #f5f5f5;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #f0f8ff;
+    border-bottom: 2px solid #007bff;
+    padding: 12px 20px;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #0056b3;
+}
+
+#map {
+    border-radius: 5px;
+    height: 400px;
+    width: 100%;
+    z-index: 1; /* Leaflet 레이어가 다른 콘텐츠 위에 올바르게 표시되게 함 */
+}
+
+/* Leaflet 팝업 스타일 */
+.leaflet-popup-content {
+    padding: 5px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.leaflet-popup-content h5 {
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.tourist-spot {
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.tourist-spot:hover {
+    background-color: #f0f8ff;
+}
+
+.tourist-spot.active {
+    background-color: #e3f2fd;
+    border-left: 4px solid #007bff;
+}
+
+.weather-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #0056b3;
+}
+
+.traffic-status-bar .progress {
+    height: 25px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+}
+
+.traffic-status-bar .progress-bar {
+    font-weight: bold;
+}
+
+.info-window {
+    padding: 10px;
+    max-width: 250px;
+}
+
+.info-window h5 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.info-window p {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+#tourist-spots-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#hourly-forecast {
+    margin-top: 20px;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #6c757d;
+}
