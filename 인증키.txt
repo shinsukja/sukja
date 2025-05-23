@@ -1,0 +1,15 @@
+광주광역시(jsno
+https://www.gjtic.go.kr:443/6290000/gjcitsdata/getTrafficFlowStatistic
+
+인증키
+cpxZINvyvRtA5reKpGGNrT/Ggj0K4cPq135hPAr5iZY9ZOxz48aVc++XN9o0M3tr5zAjkseNHF+P+Vebl3DBQw==
+
+응답예시
+https://www.gjtic.go.kr:443/6290000/gjcitsdata/getTrafficFlowStatistic?serviceKey=인증키(URL Encode)&offerDate=20200814&tasType=1
+
+
+도로공사
+http://data.ex.co.kr/openapi/basicinfo/openApiInfoM?apiId=0303
+
+인증키
+4570425724
